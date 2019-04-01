@@ -8,7 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.*;
 
 /**
- * Class for test {@code TestCacheImpl}
+ * Class for testing {@code TestCacheImpl}
  *
  * @author Voronin Leonid
  * @since 01.04.19
