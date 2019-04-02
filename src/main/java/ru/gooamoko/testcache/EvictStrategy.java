@@ -10,9 +10,6 @@ public enum EvictStrategy {
     LRU, LFU;
 
     long getMaxEvictKey() {
-        if (this == EvictStrategy.LRU) {
-            return System.currentTimeMillis();
-        }
         return Long.MAX_VALUE;
     }
 
@@ -23,10 +20,10 @@ public enum EvictStrategy {
         return 0;
     }
 
-    long getNextKey(long oldKeyValue) {
+    long getNextEvictKey(long oldKeyValue) {
         if (this == EvictStrategy.LRU) {
             return System.currentTimeMillis();
         }
-        return oldKeyValue + 1;
+        return oldKeyValue < Long.MAX_VALUE ? oldKeyValue + 1 : Long.MAX_VALUE;
     }
 }

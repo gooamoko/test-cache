@@ -46,7 +46,7 @@ public class TestCacheImplTest {
     @Test
     public void testLruMapWillEvictEntryWithKey1() throws InterruptedException {
         int capacity = 5;
-        cache = new TestCacheImpl<Integer, String>(defaultReader, mockedWriter, EvictStrategy.LRU, capacity-1);
+        cache = new TestCacheImpl<Integer, String>(defaultReader, mockedWriter, EvictStrategy.LRU, capacity - 1);
         for (int i = 1; i <= capacity; i++) {
             cache.get(i);
             Thread.sleep(100);
@@ -57,7 +57,7 @@ public class TestCacheImplTest {
     @Test
     public void testLfuMapWillEvictEntryWithKey1() {
         int capacity = 5;
-        cache = new TestCacheImpl<Integer, String>(defaultReader, mockedWriter, EvictStrategy.LFU, capacity-1);
+        cache = new TestCacheImpl<Integer, String>(defaultReader, mockedWriter, EvictStrategy.LFU, capacity - 1);
         // initial cache fill
         for (int i = 1; i < capacity; i++) {
             cache.get(i);
@@ -70,7 +70,37 @@ public class TestCacheImplTest {
     }
 
     @Test
-    public void testReaderCallsOnlyObceAndWriterIsNotCalled() {
+    public void testEvictAllIsClearsLfuCache() {
+        int capacity = 5;
+        cache = new TestCacheImpl<Integer, String>(defaultReader, mockedWriter, EvictStrategy.LFU, capacity);
+        // initial cache fill
+        for (int i = 1; i < capacity; i++) {
+            cache.get(i);
+        }
+        cache.evictAll();
+        // check for existence
+        for (int i = 1; i < capacity; i++) {
+            assertFalse(cache.containsKay(i));
+        }
+    }
+
+    @Test
+    public void testEvictAllIsClearsLruCache() {
+        int capacity = 5;
+        cache = new TestCacheImpl<Integer, String>(defaultReader, mockedWriter, EvictStrategy.LRU, capacity);
+        // initial cache fill
+        for (int i = 1; i < capacity; i++) {
+            cache.get(i);
+        }
+        cache.evictAll();
+        // check for existence
+        for (int i = 1; i < capacity; i++) {
+            assertFalse(cache.containsKay(i));
+        }
+    }
+
+    @Test
+    public void testReaderCallsOnlyObceAndWriterIsNotCalledForLfu() {
         int capacity = 5;
         int key = 42;
         cache = new TestCacheImpl<Integer, String>(mockedReader, mockedWriter, EvictStrategy.LFU, capacity);
@@ -82,11 +112,35 @@ public class TestCacheImplTest {
     }
 
     @Test
-    public void testWriterCallsEveryTimeWhenSetIsCalled() {
+    public void testReaderCallsOnlyObceAndWriterIsNotCalledForLru() {
+        int capacity = 5;
+        int key = 42;
+        cache = new TestCacheImpl<Integer, String>(mockedReader, mockedWriter, EvictStrategy.LRU, capacity);
+        for (int i = 0; i < capacity; i++) {
+            cache.get(key);
+        }
+        verify(mockedReader, times(1)).read(key);
+        verify(mockedWriter, times(0)).write(anyInt(), anyString());
+    }
+
+    @Test
+    public void testWriterCallsEveryTimeWhenSetIsCalledForLfu() {
         int capacity = 5;
         int key = 42;
         String value = "test value";
         cache = new TestCacheImpl<Integer, String>(mockedReader, mockedWriter, EvictStrategy.LFU, capacity);
+        for (int i = 0; i < capacity; i++) {
+            cache.set(key, value);
+        }
+        verify(mockedWriter, times(capacity)).write(key, value);
+    }
+
+    @Test
+    public void testWriterCallsEveryTimeWhenSetIsCalledForLru() {
+        int capacity = 5;
+        int key = 42;
+        String value = "test value";
+        cache = new TestCacheImpl<Integer, String>(mockedReader, mockedWriter, EvictStrategy.LRU, capacity);
         for (int i = 0; i < capacity; i++) {
             cache.set(key, value);
         }

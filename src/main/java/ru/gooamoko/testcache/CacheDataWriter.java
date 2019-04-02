@@ -10,7 +10,8 @@ public interface CacheDataWriter<K, V> {
 
     /**
      * Writes entry with specified key and value
-     * @param key key value
+     *
+     * @param key   key value
      * @param value data value
      */
     void write(K key, V value);

@@ -20,6 +20,7 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
     private CacheDataWriter<K, V> writer;
     private EvictStrategy strategy = DEFAULT_EVICT_STRATEGY;
 
+
     public TestCacheImpl(CacheDataReader<K, V> reader, CacheDataWriter<K, V> writer, EvictStrategy strategy, int capacity) {
         checkNotNull(reader, "Reader");
         checkNotNull(writer, "Writer");
@@ -30,17 +31,6 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
         this.capacity = capacity;
         this.reader = reader;
         this.strategy = strategy;
-    }
-
-    public TestCacheImpl(CacheDataReader<K, V> reader, CacheDataWriter<K, V> writer, int capacity) {
-        checkNotNull(reader, "Reader");
-        checkNotNull(writer, "Writer");
-        this.writer = writer;
-        if (capacity <= 0) {
-            throw new IllegalArgumentException("Capacity must be greater than 0!");
-        }
-        this.capacity = capacity;
-        this.reader = reader;
     }
 
     public TestCacheImpl(CacheDataReader<K, V> reader, CacheDataWriter<K, V> writer) {
@@ -59,7 +49,7 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
         } else {
             V value = reader.read(key);
             if (isFull()) {
-                evictItem();
+                evictOne();
             }
             CacheEntry<V> cacheEntry = new CacheEntry<V>(strategy.getMinEvictKey(), value);
             cacheMap.put(key, cacheEntry);
@@ -75,7 +65,7 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
             cacheEntry.updateEvictKey(strategy);
         } else {
             if (isFull()) {
-                evictItem();
+                evictOne();
             }
             CacheEntry<V> cacheEntry = new CacheEntry<V>(strategy.getMinEvictKey(), value);
             cacheMap.put(key, cacheEntry);
@@ -104,6 +94,9 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
         return cacheMap.containsKey(key);
     }
 
+    public void evictAll() {
+        cacheMap.clear();
+    }
 
     private void checkNotNull(Object o, String variableName) {
         if (o == null) {
@@ -111,7 +104,7 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
         }
     }
 
-    private void evictItem() {
+    private void evictOne() {
         K key = getEvictKey();
         if (key != null) {
             cacheMap.remove(key);
@@ -136,10 +129,6 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
         return key;
     }
 
-    private boolean isLRU() {
-        return strategy.equals(EvictStrategy.LRU);
-    }
-
     private boolean isLFU() {
         return strategy.equals(EvictStrategy.LFU);
     }
@@ -155,7 +144,7 @@ public class TestCacheImpl<K, V> implements TestCache<K, V> {
         }
 
         void updateEvictKey(EvictStrategy strategy) {
-            evictKey = strategy.getNextKey(evictKey);
+            evictKey = strategy.getNextEvictKey(evictKey);
         }
     }
 }
